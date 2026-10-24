@@ -8,8 +8,8 @@ import streamlit as st
 BASE_DIR = Path(__file__).parent
 ASSETS_DIR = BASE_DIR / "Assets"
 IMAGES = {
-    "light": {"background": ASSETS_DIR / "LightGameBackground.jpg", "hero": ASSETS_DIR / "PokemonBackground.jpg"},
-    "dark": {"background": ASSETS_DIR / "IndieGameBackground.jpg", "hero": ASSETS_DIR / "Charizard.jpg"},
+    "light": {"background": ASSETS_DIR / "LightGameBackground.jpg", "hero": ASSETS_DIR / "HeroLight.jpeg"},
+    "dark": {"background": ASSETS_DIR / "IndieGameBackground.jpg", "hero": ASSETS_DIR / "HeroNight.jpg"},
 }
 sys.path.insert(0, str(BASE_DIR))
 
