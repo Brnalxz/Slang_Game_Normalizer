@@ -4,7 +4,6 @@ from pathlib import Path
 
 import streamlit as st
 
-from App import load_kamus
 from Pages.text_translator import image_data_uri, page_header, svg
 
 # ======================= ISI DATA ANDA DI SINI =======================
@@ -81,14 +80,6 @@ PIPELINE_HTML = """
 # =============================================================================
 def _section_title(text: str) -> None:
     st.markdown(f'<div class="section-title">{text}</div>', unsafe_allow_html=True)
-
-
-def _term_count() -> str:
-    try:
-        return f"{len(load_kamus()):,}".replace(",", ".")
-    except FileNotFoundError:
-        return "-"
-
 
 def _avatar(nama: str, foto: str) -> str:
     photo = TIM_DIR / foto

@@ -2,10 +2,10 @@
 streamlit>=1.65.0
 pandas==3.0.5
 openpyxl==3.1.5
-xlrd
+xlrd==2.0.2
 torch==2.14.1
 transformers==5.19.0
 sentencepiece==0.2.2
-protobuf
-huggingface_hub>=0.23
-safetensors>=0.4.2
+protobuf==7.36.2
+huggingface_hub>=1.33
+safetensors>=0.8.0
