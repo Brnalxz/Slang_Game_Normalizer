@@ -1,0 +1,24 @@
+[theme]
+base = "light"
+primaryColor = "#2563EB"
+backgroundColor = "#F8F9FB"
+secondaryBackgroundColor = "#F3F4F6"
+textColor = "#111827"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap, sans-serif"
+
+[theme.sidebar]
+backgroundColor = "#FFFFFF"
+
+[client]
+toolbarMode = "viewer"
+
+[server]
+maxUploadSize = 5           # MB, sesuai batas di Comment Translator
+# Watcher dimatikan: dengan torch/transformers terpasang, watcher memindai ratusan submodul
+# transformers (startup lambat, RAM boros, log penuh peringatan "torchvision").
+# Akibatnya: setelah mengedit file .py, hentikan (Ctrl+C) lalu jalankan ulang streamlit.
+# Style.css tetap terbaca ulang cukup dengan refresh browser.
+fileWatcherType = "none"
+
+[browser]
+gatherUsageStats = false
