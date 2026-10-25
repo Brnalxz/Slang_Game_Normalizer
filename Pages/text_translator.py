@@ -101,6 +101,35 @@ def loading_overlay(message: str):
         overlay.empty()
 
 
+def _page_numbers(page: int, total_pages: int) -> list:
+    if total_pages <= 7:
+        return list(range(1, total_pages + 1))
+    if page <= 4:
+        return [1, 2, 3, 4, 5, None, total_pages]
+    if page >= total_pages - 3:
+        return [1, None] + list(range(total_pages - 4, total_pages + 1))
+    return [1, None, page - 1, page, page + 1, None, total_pages]
+
+
+def _set_page(page_key: str, page: int) -> None:
+    st.session_state[page_key] = page
+
+
+def pager(key: str, page_key: str, page: int, total_pages: int) -> None:
+    with st.container(key=key, horizontal=True, horizontal_alignment="center",
+                      vertical_alignment="center", gap="small"):
+        st.button(":material/chevron_left:", key=f"{key}_prev", disabled=page <= 1,
+                  on_click=_set_page, args=(page_key, page - 1))
+        for number in _page_numbers(page, total_pages):
+            if number is None:
+                st.markdown('<div class="pager-gap">…</div>', unsafe_allow_html=True)
+            else:
+                st.button(str(number), key=f"{key}_{number}", type="primary" if number == page else "secondary",
+                          on_click=_set_page, args=(page_key, number))
+        st.button(":material/chevron_right:", key=f"{key}_next", disabled=page >= total_pages,
+                  on_click=_set_page, args=(page_key, page + 1))
+
+
 # =============================================================================
 # TOMBOL SALIN HASIL
 # =============================================================================

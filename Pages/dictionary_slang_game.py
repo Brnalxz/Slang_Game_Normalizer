@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 
 from App import load_kamus
-from Pages.text_translator import html_table, page_header
+from Pages.text_translator import html_table, page_header, pager
 
 PAGE_SIZE = 10
 SEARCH_DELAY = "200ms"
@@ -16,10 +16,6 @@ WIDTHS = ["64px", "30%", None]
 
 PAGE_KEY = "dict_page"
 LAST_QUERY_KEY = "dict_q"
-
-
-def _go(delta: int) -> None:
-    st.session_state[PAGE_KEY] = st.session_state.get(PAGE_KEY, 1) + delta
 
 
 def _search_box() -> str:
@@ -47,15 +43,6 @@ def _current_page(query: str, total_pages: int) -> int:
     return page
 
 
-def _pager(page: int, total_pages: int) -> None:
-    with st.container(key="pager", horizontal=True, horizontal_alignment="center",
-                      vertical_alignment="center", gap="small"):
-        st.button("‹ Sebelumnya", key="prev", disabled=page <= 1, on_click=_go, args=(-1,), type="tertiary")
-        st.markdown(f'<div class="page-chip">Halaman {page} dari {total_pages}</div>', unsafe_allow_html=True)
-        st.button("Berikutnya ›", key="next", disabled=page >= total_pages, on_click=_go, args=(1,),
-                  type="tertiary")
-
-
 @st.fragment
 def _dictionary(df: pd.DataFrame) -> None:
     query = _search_box()
@@ -71,7 +58,7 @@ def _dictionary(df: pd.DataFrame) -> None:
     with st.container(key="dict_card"):
         st.markdown(html_table(HEADERS, rows, COLUMN_CLASSES, empty_text="Istilah tidak ditemukan.", widths=WIDTHS),
                     unsafe_allow_html=True)
-        _pager(page, total_pages)
+        pager("pager", PAGE_KEY, page, total_pages)
 
 
 def render() -> None:

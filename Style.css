@@ -254,14 +254,25 @@ header[data-testid="stHeader"] { background: transparent; pointer-events: none; 
 .st-key-result_footer [data-testid="stBaseButton-primary"] { height: 35px; padding: 0 20px; }
 .st-key-result_footer [data-testid="stBaseButton-primary"] p { font-weight: 500; font-size: 14px; }
 
-:is(.st-key-pager, .st-key-ct_pager) { padding: 18px 16px 18px; gap: 18px !important; }
-:is(.st-key-pager, .st-key-ct_pager) button { background: transparent; border: 0; box-shadow: none; padding: 0 2px; min-height: 0; height: 28px; }
-:is(.st-key-pager, .st-key-ct_pager) button p { color: var(--primary); font-weight: 500; white-space: nowrap; font-size: 13px; }
-:is(.st-key-pager, .st-key-ct_pager) button:disabled p { color: var(--muted); }
-:is(.st-key-pager, .st-key-ct_pager) button:hover:not(:disabled) p { color: var(--primary-dark); text-decoration: underline; }
-:is(.st-key-pager, .st-key-ct_pager) [data-testid="stMarkdown"], :is(.st-key-pager, .st-key-ct_pager) [data-testid="stMarkdownContainer"] { margin: 0 !important; }
-.page-chip { line-height: 18px; background: var(--primary-soft); color: var(--primary); font-weight: 600; text-align: center;
-  border-radius: 6px; padding: 5px 15px; white-space: nowrap; font-size: 13px; }
+:is(.st-key-pager, .st-key-ct_pager) { padding: 18px 16px; gap: 8px !important; flex-wrap: wrap; }
+[data-testid="stMain"] :is(.st-key-pager, .st-key-ct_pager) button { width: 36px; min-width: 36px; height: 36px; min-height: 36px; padding: 0;
+  border-radius: 10px; border: 1.5px solid var(--card-border); background: var(--surface); box-shadow: none;
+  transition: border-color .15s, background .15s; }
+[data-testid="stMain"] :is(.st-key-pager, .st-key-ct_pager) button p { color: var(--text); font-weight: 600; font-size: 14px; }
+[data-testid="stMain"] :is(.st-key-pager, .st-key-ct_pager) button p span[role="img"] { font-size: 20px; line-height: 1; vertical-align: middle !important; }
+[data-testid="stMain"] :is(.st-key-pager, .st-key-ct_pager) button:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-soft); }
+[data-testid="stMain"] :is(.st-key-pager, .st-key-ct_pager) [data-testid="stBaseButton-primary"],
+[data-testid="stMain"] :is(.st-key-pager, .st-key-ct_pager) [data-testid="stBaseButton-primary"]:hover { background: var(--primary); border-color: var(--primary); }
+[data-testid="stMain"] :is(.st-key-pager, .st-key-ct_pager) [data-testid="stBaseButton-primary"] p { color: #fff; }
+[data-testid="stMain"] :is(.st-key-pager, .st-key-ct_pager) button:disabled { opacity: .4; cursor: not-allowed; }
+:is(.st-key-pager, .st-key-ct_pager) [data-testid="stMarkdown"], :is(.st-key-pager, .st-key-ct_pager) [data-testid="stMarkdownContainer"] { margin: 0 !important; width: auto !important; }
+.pager-gap { width: 20px; text-align: center; color: var(--text-2); font-weight: 600; letter-spacing: 1px; }
+@media (max-width: 480px) {
+  :is(.st-key-pager, .st-key-ct_pager) { padding: 14px 8px; gap: 4px !important; }
+  [data-testid="stMain"] :is(.st-key-pager, .st-key-ct_pager) button { width: 30px; min-width: 30px; height: 30px; min-height: 30px; border-radius: 8px; }
+  [data-testid="stMain"] :is(.st-key-pager, .st-key-ct_pager) button p { font-size: 13px; }
+  .pager-gap { width: 14px; }
+}
 
 /* ========================== 11. Bantuan (FAQ) ========================== */
 [data-testid="stExpander"] details { background: var(--surface); border: 1px solid var(--card-border); border-radius: 10px;

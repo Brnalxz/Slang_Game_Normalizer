@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from App import engine_status, normalize_batch
-from Pages.text_translator import html_table, loading_overlay, page_header, svg
+from Pages.text_translator import html_table, loading_overlay, page_header, pager, svg
 
 MAX_MB = 5
 PAGE_SIZE = 10
@@ -140,7 +140,7 @@ def _error_dialog(message: str, offer_template: bool) -> None:
     _dialog_body("alert", "red", ERROR_TITLE, message)
     with st.container(key="dlg_actions", horizontal=True, horizontal_alignment="center"):
         if offer_template:
-            st.download_button("Download Template", data=template_excel(), file_name=f"{TEMPLATE_NAME}.xlsx",
+            st.download_button("DOWNLOAD TEMPLATE", data=template_excel(), file_name=f"{TEMPLATE_NAME}.xlsx",
                                mime=XLSX_MIME, icon=":material/download:", on_click="ignore", key="dlg_template")
         if st.button("Mengerti", type="primary", key="dlg_ok"):
             st.rerun()
@@ -183,7 +183,7 @@ def _upload_area(upload_key: int):
 
 def _template_button() -> None:
     with st.container(key="template_row", horizontal=True, horizontal_alignment="center"):
-        st.download_button("Download Template", data=template_excel(), file_name=f"{TEMPLATE_NAME}.xlsx",
+        st.download_button("DOWNLOAD TEMPLATE", data=template_excel(), file_name=f"{TEMPLATE_NAME}.xlsx",
                            mime=XLSX_MIME, type="tertiary", icon=":material/download:",
                            on_click="ignore", key="tpl_xlsx")
 
@@ -221,10 +221,6 @@ def _load_comments(uploaded) -> list[str]:
     return comments
 
 
-def _go(delta: int) -> None:
-    st.session_state[PAGE_KEY] = st.session_state.get(PAGE_KEY, 1) + delta
-
-
 def _current_page(owner: str, total_pages: int) -> int:
     if st.session_state.get(PAGE_OWNER_KEY) != owner:
         st.session_state[PAGE_OWNER_KEY] = owner
@@ -232,15 +228,6 @@ def _current_page(owner: str, total_pages: int) -> int:
     page = min(max(1, st.session_state.get(PAGE_KEY, 1)), total_pages)
     st.session_state[PAGE_KEY] = page
     return page
-
-
-def _pager(page: int, total_pages: int) -> None:
-    with st.container(key="ct_pager", horizontal=True, horizontal_alignment="center",
-                      vertical_alignment="center", gap="small"):
-        st.button("‹ Sebelumnya", key="ct_prev", disabled=page <= 1, on_click=_go, args=(-1,), type="tertiary")
-        st.markdown(f'<div class="page-chip">Halaman {page} dari {total_pages}</div>', unsafe_allow_html=True)
-        st.button("Berikutnya ›", key="ct_next", disabled=page >= total_pages, on_click=_go, args=(1,),
-                  type="tertiary")
 
 
 @st.fragment
@@ -254,7 +241,7 @@ def _result_card(result: pd.DataFrame, owner: str) -> None:
         st.markdown(html_table(HEADERS, rows, COLUMN_CLASSES, truncate=True, widths=WIDTHS),
                     unsafe_allow_html=True)
         if total_pages > 1:
-            _pager(page, total_pages)
+            pager("ct_pager", PAGE_KEY, page, total_pages)
 
         with st.container(key="result_footer", horizontal=True, vertical_alignment="center", gap="small"):
             st.markdown(f'<div class="total">Total: {len(result)} komentar</div>',

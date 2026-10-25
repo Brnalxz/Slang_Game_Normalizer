@@ -8,7 +8,7 @@ from Pages.text_translator import image_data_uri, page_header, svg
 
 # ======================= ISI DATA ANDA DI SINI =======================
 NAMA_APLIKASI = "Slang Game Normalizer"
-PEMBUAT = {"nama": "Brandon Alexander Jayadi", "keterangan": "NIM 535230088", "foto": "Student.png"}
+PEMBUAT = {"nama": "Brandon Alexander Jayadi", "foto": "Student.png"}
 PEMBIMBING = [
     {"nama": "Viny Christanti Mawardi, S.Kom., M.Kom.", "keterangan": "Dosen Pembimbing 1", "foto": "DosenPembimbing.jpg"},
     {"nama": "Daniel Jahja Surjawan, S.Kom., M. T.", "keterangan": "Dosen Pembimbing 2", "foto": "DosenPendamping.jpeg"},
