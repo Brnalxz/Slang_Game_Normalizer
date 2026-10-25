@@ -314,26 +314,64 @@ header[data-testid="stHeader"] { background: transparent; pointer-events: none; 
   border-top: 1px solid var(--border); }
 
 /* ============== 13. Tombol pojok atas & sidebar tertutup ============== */
-.st-key-theme_btn, .st-key-side_btn { position: fixed !important; top: 8px; z-index: 1000; width: auto !important; }
+.st-key-theme_btn, [class*="st-key-side_btn"] { position: fixed !important; top: 8px; z-index: 1000; width: auto !important; }
 .st-key-theme_btn { right: 20px; }
-.st-key-side_btn { left: calc(var(--sidebar-w) + 12px); }
+[class*="st-key-side_btn"] { left: calc(var(--sidebar-w) + 12px); }
 
-.st-key-theme_btn button, .st-key-side_btn button { width: 36px !important; height: 36px !important; min-width: 0 !important;
+.st-key-theme_btn button, [class*="st-key-side_btn"] button { width: 36px !important; height: 36px !important; min-width: 0 !important;
   min-height: 0 !important; padding: 0 !important; border-radius: 50% !important;
   background: var(--surface) !important; border: 1px solid var(--input-border) !important; box-shadow: 0 1px 4px var(--shadow-1);
   display: flex; align-items: center; justify-content: center; }
-.st-key-theme_btn button:hover, .st-key-side_btn button:hover { background: var(--hover) !important; border-color: var(--primary) !important; }
-.st-key-theme_btn button:focus:not(:active), .st-key-side_btn button:focus:not(:active) { border-color: var(--input-border); }
-.st-key-theme_btn [data-testid="stIconMaterial"], .st-key-side_btn [data-testid="stIconMaterial"] {
+.st-key-theme_btn button:hover, [class*="st-key-side_btn"] button:hover { background: var(--hover) !important; border-color: var(--primary) !important; }
+.st-key-theme_btn button:focus:not(:active), [class*="st-key-side_btn"] button:focus:not(:active) { border-color: var(--input-border); }
+.st-key-theme_btn [data-testid="stIconMaterial"], [class*="st-key-side_btn"] [data-testid="stIconMaterial"] {
   color: var(--nav); font-size: 19px; margin: 0; }
 .st-key-theme_btn button:hover [data-testid="stIconMaterial"],
-.st-key-side_btn button:hover [data-testid="stIconMaterial"] { color: var(--primary); }
+[class*="st-key-side_btn"] button:hover [data-testid="stIconMaterial"] { color: var(--primary); }
 
-:root:has(.sidebar-closed) [data-testid="stSidebar"] { display: none !important; }
-:root:has(.sidebar-closed) .st-key-side_btn { left: 14px; }
-.sidebar-closed { display: none; }
+.st-key-side_btn_open { left: 14px; }
+.sidebar-open, .sidebar-closed { display: none; }
+.st-key-side_backdrop { position: fixed !important; inset: 0; z-index: 998; }
+[data-testid="stMain"] .st-key-side_backdrop button { width: 100vw; height: 100vh; border: 0 !important; border-radius: 0 !important;
+  background: rgba(15, 23, 42, .45) !important; box-shadow: none !important; cursor: default; }
 
-/* =========================== 14. Layar loading =========================== */
+/* ============== 14. Tampilan HP dan tablet ============== */
+@media (min-width: 1025px) {
+  :root:has(.sidebar-closed) [data-testid="stSidebar"] { display: none !important; }
+  :root:has(.sidebar-closed) .st-key-side_btn_close, :root:not(:has(.sidebar-closed)) .st-key-side_btn_open,
+  .st-key-side_backdrop { display: none !important; }
+}
+@media (max-width: 1279px) {
+  .hero-desc br { display: none; }
+  [class*="st-key-feat_"], [class*="st-key-about_use_"] { padding: 24px 20px 22px !important; }
+  [data-testid="stMain"] :is([class*="st-key-feat_"], [class*="st-key-about_use_"]) [data-testid="stPageLink-NavLink"] { padding: 0 8px; }
+  [data-testid="stMain"] :is([class*="st-key-feat_"], [class*="st-key-about_use_"]) [data-testid="stPageLink-NavLink"] p { font-size: 14px; }
+}
+@media (max-width: 1024px) {
+  [data-testid="stMainBlockContainer"], .block-container { padding: 34px 28px 40px !important; }
+  [data-testid="stSidebar"] { position: fixed !important; top: 0; left: 0; z-index: 999 !important; }
+  :root:not(:has(.sidebar-open)) [data-testid="stSidebar"] { display: none !important; }
+  :root:not(:has(.sidebar-open)) :is(.st-key-side_btn_close, .st-key-side_backdrop),
+  :root:has(.sidebar-open) .st-key-side_btn_open { display: none !important; }
+}
+@media (max-width: 900px) {
+  .pipeline { flex-direction: column; }
+  .pipe-step { flex: none; }
+  .pipe-arrow { transform: rotate(90deg); line-height: 1; }
+}
+@media (max-width: 767px) {
+  [data-testid="stMain"] :is([class*="st-key-feat_"], [class*="st-key-about_use_"]) [data-testid="stPageLink-NavLink"] {
+    height: auto; min-height: 41px; padding: 6px 8px; }
+  [data-testid="stMain"] :is([class*="st-key-feat_"], [class*="st-key-about_use_"]) [data-testid="stPageLink-NavLink"] p {
+    white-space: normal !important; overflow: visible !important; text-align: center; line-height: 1.25; }
+}
+@media (max-width: 640px) {
+  .st-key-hero { padding: 28px 24px !important; }
+  .hero-title { font-size: 34px !important; }
+  .hero-img { margin-left: 0; transform: none; }
+}
+
+/* =========================== 15. Layar loading =========================== */
 [data-testid="stElementContainer"]:has(> [data-testid="stMarkdown"] .loading-overlay) { position: absolute; }
 .loading-overlay { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center; justify-content: center;
   background: var(--overlay); backdrop-filter: blur(2px); cursor: wait; animation: loading-in .2s ease .3s both; }
@@ -345,7 +383,7 @@ header[data-testid="stHeader"] { background: transparent; pointer-events: none; 
 @keyframes loading-spin { to { transform: rotate(360deg); } }
 @keyframes loading-in { from { opacity: 0; } to { opacity: 1; } }
 
-/* ============================ 15. Popup dialog ============================ */
+/* ============================ 16. Popup dialog ============================ */
 [data-testid="stDialog"] > div { background: var(--surface) !important; border-radius: 14px !important; }
 [role="dialog"] { background: var(--surface) !important; color: var(--text) !important;
   border: 1px solid var(--card-border); border-radius: 14px !important; box-shadow: 0 20px 50px -12px var(--shadow-2); }
@@ -369,7 +407,7 @@ header[data-testid="stHeader"] { background: transparent; pointer-events: none; 
 .st-key-dlg_yes [data-testid="stBaseButton-primary"] { background: var(--danger-btn) !important; }
 .st-key-dlg_yes [data-testid="stBaseButton-primary"]:hover { background: var(--danger-btn) !important; filter: brightness(.92); }
 
-/* =========================== 16. Animasi muncul =========================== */
+/* =========================== 17. Animasi muncul =========================== */
 .st-key-hero, [class*="st-key-feat_"], [class*="st-key-about_"], .st-key-upload_zone, .st-key-result_card,
 .st-key-dict_card, [data-testid="stMain"] [data-testid="stTextInput"], [data-testid="stMain"] [data-testid="stExpander"] {
   animation: card-in .5s cubic-bezier(.2, .7, .3, 1) both !important; }
@@ -387,7 +425,7 @@ header[data-testid="stHeader"] { background: transparent; pointer-events: none; 
   .st-key-dict_card, [data-testid="stMain"] [data-testid="stTextInput"], [data-testid="stMain"] [data-testid="stExpander"] {
     animation: none !important; } }
 
-/* ============================ 17. Mode gelap ============================ */
+/* ============================ 18. Mode gelap ============================ */
 :root:has(.dark-mode-on) {
   color-scheme: dark;
   --primary: #3B82F6;

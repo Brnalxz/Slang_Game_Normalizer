@@ -21,6 +21,7 @@ from Pages.text_translator import image_data_uri, svg
 
 DARK_MODE_KEY = "dark_mode"
 SIDEBAR_OPEN_KEY = "sidebar_open"
+LAST_PAGE_KEY = "last_page"
 PAGES_KEY = "PAGES"
 
 
@@ -134,7 +135,10 @@ def _menu_link(pages: dict, key: str, group: str, current_title: str) -> None:
 def _state_markers() -> None:
     if st.session_state.get(DARK_MODE_KEY, False):
         st.markdown('<div class="dark-mode-on"></div>', unsafe_allow_html=True)
-    if not st.session_state.get(SIDEBAR_OPEN_KEY, True):
+    sidebar_open = st.session_state.get(SIDEBAR_OPEN_KEY)
+    if sidebar_open is True:
+        st.markdown('<div class="sidebar-open"></div>', unsafe_allow_html=True)
+    elif sidebar_open is False:
         st.markdown('<div class="sidebar-closed"></div>', unsafe_allow_html=True)
 
 def render_sidebar(pages: dict, current_title: str) -> None:
@@ -160,11 +164,20 @@ def render_sidebar(pages: dict, current_title: str) -> None:
 def _toggle(key: str, default: bool) -> None:
     st.session_state[key] = not st.session_state.get(key, default)
 
+def _set_sidebar(value) -> None:
+    st.session_state[SIDEBAR_OPEN_KEY] = value
+
+def _close_sidebar_on_navigate(current_title: str) -> None:
+    if st.session_state.get(LAST_PAGE_KEY) != current_title:
+        st.session_state[LAST_PAGE_KEY] = current_title
+        if st.session_state.get(SIDEBAR_OPEN_KEY) is True:
+            st.session_state[SIDEBAR_OPEN_KEY] = None
+
 def render_corner_buttons() -> None:
-    sidebar_open = st.session_state.get(SIDEBAR_OPEN_KEY, True)
     dark_mode = st.session_state.get(DARK_MODE_KEY, False)
-    st.button("", key="side_btn", on_click=_toggle, args=(SIDEBAR_OPEN_KEY, True),
-              icon=":material/menu_open:" if sidebar_open else ":material/menu:")
+    st.button("", key="side_btn_close", on_click=_set_sidebar, args=(False,), icon=":material/menu_open:")
+    st.button("", key="side_btn_open", on_click=_set_sidebar, args=(True,), icon=":material/menu:")
+    st.button(" ", key="side_backdrop", on_click=_set_sidebar, args=(None,))
     st.button("", key="theme_btn", on_click=_toggle, args=(DARK_MODE_KEY, False),
               icon=":material/light_mode:" if dark_mode else ":material/dark_mode:")
 
@@ -177,6 +190,7 @@ PAGES = build_pages()
 st.session_state[PAGES_KEY] = PAGES
 navigation = st.navigation(list(PAGES.values()), position="hidden")
 
+_close_sidebar_on_navigate(navigation.title)
 render_sidebar(PAGES, navigation.title)
 render_corner_buttons()
 navigation.run()
