@@ -238,6 +238,8 @@ header[data-testid="stHeader"] { background: transparent; pointer-events: none; 
 .tbl td:first-child, .tbl th:first-child { padding-right: 0; }
 .tbl td:nth-child(2), .tbl th:nth-child(2) { padding-left: 0; }
 .tbl.trunc td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-key-result_card .tbl td { padding-top: 11px; padding-bottom: 11px; line-height: 1.55; vertical-align: top;
+  white-space: normal; overflow-wrap: anywhere; }
 .tbl td.num { color: var(--muted); font-size: 13px; }
 
 .tbl th.num { width: 64px; }
@@ -336,6 +338,7 @@ header[data-testid="stHeader"] { background: transparent; pointer-events: none; 
   background: rgba(15, 23, 42, .45) !important; box-shadow: none !important; cursor: default; }
 
 /* ============== 14. Tampilan HP dan tablet ============== */
+/* Urutan dari layar terbesar ke terkecil, supaya aturan layar kecil menimpa aturan layar besar. */
 @media (min-width: 1025px) {
   :root:has(.sidebar-closed) [data-testid="stSidebar"] { display: none !important; }
   :root:has(.sidebar-closed) .st-key-side_btn_close, :root:not(:has(.sidebar-closed)) .st-key-side_btn_open,
@@ -392,6 +395,7 @@ header[data-testid="stHeader"] { background: transparent; pointer-events: none; 
 .dlg-icon { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   margin: 14px auto 16px; }
 .dlg-icon.red { background: var(--red-soft); color: var(--red); }
+.dlg-icon.amber { background: var(--amber-soft); color: var(--amber); }
 [role="dialog"] .dlg-title { color: var(--text) !important; font-size: 19px; font-weight: 700; text-align: center; margin-bottom: 8px; }
 [role="dialog"] .dlg-text, [role="dialog"] .dlg-text * { color: var(--text-2) !important; font-size: 14.5px; line-height: 1.6;
   text-align: center; }

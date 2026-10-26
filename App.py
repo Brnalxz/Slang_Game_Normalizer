@@ -2,6 +2,7 @@
 import argparse
 import os
 import re
+import string
 import time
 from pathlib import Path
 from typing import NamedTuple
@@ -27,6 +28,7 @@ BASE_DIR = Path(__file__).parent
 
 KAMUS_PATH = BASE_DIR / "Kamus_Slang_Game.xlsx"
 KAMUS_CSV_FALLBACK = BASE_DIR / "KamusSlangGame.csv"
+KORPUS_PATH = BASE_DIR / "ParallelCorpus_Augmented.csv"
 
 MODEL_ID = os.getenv("MT5_MODEL_ID", "Brnalxz/mt5-small-normalisasi-slang-game")
 MODEL_REVISION = os.getenv("MT5_MODEL_REVISION", "main")
@@ -77,7 +79,7 @@ def load_kamus() -> pd.DataFrame:
 def _build_mapping(df: pd.DataFrame) -> tuple[dict, int]:
     mapping = {}
     for slang, baku in zip(df["slang"], df["baku"]):
-        key = preprocess(slang)
+        key = clean_key(slang)
         if key and key not in mapping:
             mapping[key] = baku
     longest = max((len(key.split()) for key in mapping), default=1)
@@ -98,16 +100,26 @@ URL_RE = re.compile(r"(https?://\S+|www\.\S+)")
 MENTION_RE = re.compile(r"[@#]\w+")
 REPEATED_LETTER_RE = re.compile(r"([a-z])\1{2,}")
 NON_ALPHANUMERIC_RE = re.compile(r"[^a-z0-9\s]")
+NON_TEXT_RE = re.compile(rf"[^a-z0-9\s{re.escape(string.punctuation)}]")
+PUNCT_BEFORE_WORD_RE = re.compile(r"([.,!?;:])(?=[a-z])")
 WHITESPACE_RE = re.compile(r"\s+")
 
-def preprocess(text) -> str:
+def _basic_clean(text) -> str:
     text = "" if pd.isna(text) else str(text)
     text = text.lower()
     text = URL_RE.sub(" ", text)
     text = MENTION_RE.sub(" ", text)
     text = EMOJI_RE.sub(" ", text)
-    text = REPEATED_LETTER_RE.sub(r"\1", text)
-    text = NON_ALPHANUMERIC_RE.sub(" ", text)
+    return REPEATED_LETTER_RE.sub(r"\1", text)
+
+def preprocess(text) -> str:
+    text = _basic_clean(text)
+    text = NON_TEXT_RE.sub(" ", text)
+    text = PUNCT_BEFORE_WORD_RE.sub(r"\1 ", text)
+    return WHITESPACE_RE.sub(" ", text).strip()
+
+def clean_key(text) -> str:
+    text = NON_ALPHANUMERIC_RE.sub(" ", _basic_clean(text))
     return WHITESPACE_RE.sub(" ", text).strip()
 
 
@@ -127,7 +139,7 @@ def _tokenize(text: str) -> list[_Token]:
     tokens = []
     for raw in text.split():
         lead, word, trail = EDGE_PUNCTUATION_RE.match(raw).groups()
-        tokens.append(_Token(lead, word, trail, preprocess(word)))
+        tokens.append(_Token(lead, word, trail, clean_key(word)))
     return tokens
 
 def _phrase_key(span: list[_Token]) -> str:
@@ -259,19 +271,41 @@ def _chunks(text: str) -> list[str]:
     words = text.split()
     return [" ".join(words[i:i + CHUNK_WORDS]) for i in range(0, len(words), CHUNK_WORDS)] or [""]
 
+PUNCT_SPLIT_RE = re.compile(r"([.,!?;:]+)(?=\s|$)")
+TRAILING_PUNCT = ".,!?;: "
+
+def _split_punctuation(text: str) -> list[tuple[str, str]]:
+    parts = PUNCT_SPLIT_RE.split(text)
+    pairs = []
+    for i in range(0, len(parts), 2):
+        segment = parts[i].strip()
+        punct = parts[i + 1] if i + 1 < len(parts) else ""
+        if segment or punct:
+            pairs.append((segment, punct))
+    return pairs
+
 def _generate_in_chunks(texts: list[str]) -> list[str]:
-    pieces, owners = [], []
-    for index, text in enumerate(texts):
-        if text:
-            for piece in _chunks(text):
-                pieces.append(piece)
-                owners.append(index)
+    pieces, plans = [], []
+    for text in texts:
+        plan = []
+        for segment, punct in _split_punctuation(text):
+            ids = []
+            if segment:
+                for piece in _chunks(segment):
+                    ids.append(len(pieces))
+                    pieces.append(piece)
+            plan.append((ids, punct))
+        plans.append(plan)
 
     generated = mt5_generate(pieces) if pieces else []
-    parts = [[] for _ in texts]
-    for index, source, output in zip(owners, pieces, generated):
-        parts[index].append(output or source)
-    return [" ".join(p) for p in parts]
+    results = []
+    for plan in plans:
+        parts = []
+        for ids, punct in plan:
+            words = " ".join(generated[i] or pieces[i] for i in ids).rstrip(TRAILING_PUNCT)
+            parts.append((words + punct).strip())
+        results.append(" ".join(p for p in parts if p))
+    return results
 
 def run_pipeline(texts: list) -> dict:
     model_ready, _ = engine_status()
@@ -292,3 +326,25 @@ def normalize_batch(texts: list) -> list[str]:
 
 def normalize_text(text) -> str:
     return normalize_batch([text])[0]
+
+
+# =============================================================================
+# 6. KATA BELUM TERDAFTAR — kata yang tidak ada di korpus paralel maupun kamus
+# =============================================================================
+KORPUS_COLUMNS = ("clean_comment", "baku_reference")
+
+def _words(text) -> list[str]:
+    return [w for w in clean_key(text).split() if not w.isdigit()]
+
+@st.cache_data(show_spinner=False)
+def _build_vocabulary(path: str, modified_time: float, kamus: pd.DataFrame) -> frozenset:
+    df = pd.read_csv(path, usecols=lambda c: c in KORPUS_COLUMNS, dtype=str)
+    texts = [t for column in df.columns for t in df[column].dropna()]
+    texts += list(kamus["slang"]) + list(kamus["baku"])
+    return frozenset(w for t in texts for w in _words(t))
+
+def unknown_words(text) -> list[str]:
+    if not KORPUS_PATH.exists():
+        return []
+    vocabulary = _build_vocabulary(str(KORPUS_PATH), KORPUS_PATH.stat().st_mtime, load_kamus())
+    return list(dict.fromkeys(w for w in _words(text) if w not in vocabulary))

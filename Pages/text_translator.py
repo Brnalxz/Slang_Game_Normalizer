@@ -7,7 +7,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from App import engine_status, normalize_text
+from App import engine_status, normalize_text, unknown_words
 
 MAX_CHARS = 500
 INPUT_HEIGHT = 154
@@ -229,6 +229,27 @@ def _show_result(result: str) -> None:
     _copy_button(result)
 
 
+UNKNOWN_TITLE = "Kata belum terdaftar"
+
+
+def _join_words(words: list[str]) -> str:
+    bold = [f"<b>{html.escape(w)}</b>" for w in words]
+    if len(bold) <= 2:
+        return " dan ".join(bold)
+    return ", ".join(bold[:-1]) + ", dan " + bold[-1]
+
+
+@st.dialog(UNKNOWN_TITLE)
+def _unknown_words_dialog(words: list[str]) -> None:
+    st.markdown(f'<div class="dlg-icon amber">{svg("alert", 32)}</div>'
+                f'<div class="dlg-title">{UNKNOWN_TITLE}</div>'
+                f'<div class="dlg-text">Maaf, kata {_join_words(words)} belum terdaftar sehingga '
+                f'belum dapat dinormalisasi dengan tepat.</div>', unsafe_allow_html=True)
+    with st.container(key="dlg_actions", horizontal=True, horizontal_alignment="center"):
+        if st.button("Mengerti", type="primary", key="dlg_unknown_ok"):
+            st.rerun()
+
+
 def render() -> None:
     page_header("Text Translator", "Masukkan teks slang game untuk dinormalisasikan ke bahasa Indonesia")
     text = _text_input()
@@ -238,6 +259,9 @@ def render() -> None:
         if text.strip():
             with loading_overlay("Menormalisasi teks..."):
                 st.session_state[RESULT_KEY] = normalize_text(text)
+            unknown = unknown_words(text)
+            if unknown:
+                _unknown_words_dialog(unknown)
         else:
             st.session_state[RESULT_KEY] = None
             st.warning("Masukkan teks terlebih dahulu.")

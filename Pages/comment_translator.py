@@ -238,7 +238,7 @@ def _result_card(result: pd.DataFrame, owner: str) -> None:
 
     with st.container(key="result_card"):
         rows = result.iloc[start:start + PAGE_SIZE].values.tolist()
-        st.markdown(html_table(HEADERS, rows, COLUMN_CLASSES, truncate=True, widths=WIDTHS),
+        st.markdown(html_table(HEADERS, rows, COLUMN_CLASSES, widths=WIDTHS),
                     unsafe_allow_html=True)
         if total_pages > 1:
             pager("ct_pager", PAGE_KEY, page, total_pages)
