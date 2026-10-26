@@ -243,8 +243,8 @@ def _join_words(words: list[str]) -> str:
 def _unknown_words_dialog(words: list[str]) -> None:
     st.markdown(f'<div class="dlg-icon amber">{svg("alert", 32)}</div>'
                 f'<div class="dlg-title">{UNKNOWN_TITLE}</div>'
-                f'<div class="dlg-text">Maaf, kata {_join_words(words)} belum terdaftar sehingga '
-                f'belum dapat dinormalisasi dengan tepat.</div>', unsafe_allow_html=True)
+                f'<div class="dlg-text">Maaf, kata {_join_words(words)} belum terdaftar sehingga hasil '
+                f'normalisasi kata tersebut mungkin belum tepat.</div>', unsafe_allow_html=True)
     with st.container(key="dlg_actions", horizontal=True, horizontal_alignment="center"):
         if st.button("Mengerti", type="primary", key="dlg_unknown_ok"):
             st.rerun()
