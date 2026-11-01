@@ -62,7 +62,7 @@ PIPELINE_HTML = """
 <div class="about-subtitle">Alur normalisasi</div>
 <div class="pipeline">
   <div class="pipe-step"><div class="pipe-num">1</div><div class="pipe-title">Preprocessing</div>
-    <div class="pipe-desc">Huruf kecil, hapus URL, mention, hashtag, emoji, dan tanda baca, rapikan huruf berulang
+    <div class="pipe-desc">Mengubah huruf kecil, hapus URL, mention, hashtag, emoji, dan merapikan huruf berulang
     ("mantappp" → "mantap").</div></div>
   <div class="pipe-arrow">→</div>
   <div class="pipe-step main"><div class="pipe-num">2</div><div class="pipe-title">Model mT5</div>

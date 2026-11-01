@@ -407,6 +407,7 @@ header[data-testid="stHeader"] { background: transparent; pointer-events: none; 
 .st-key-dlg_actions [data-testid="stBaseButton-secondary"] { background: var(--surface) !important;
   border: 1px solid var(--input-border) !important; }
 .st-key-dlg_actions [data-testid="stBaseButton-secondary"] p { color: var(--text-2) !important; font-weight: 500; }
+.st-key-dlg_actions [data-testid="stBaseButton-secondary"] [data-testid="stIconMaterial"] { color: var(--text-2) !important; }
 .st-key-dlg_actions [data-testid="stBaseButton-secondary"]:hover { background: var(--hover) !important; }
 .st-key-dlg_yes [data-testid="stBaseButton-primary"] { background: var(--danger-btn) !important; }
 .st-key-dlg_yes [data-testid="stBaseButton-primary"]:hover { background: var(--danger-btn) !important; filter: brightness(.92); }
