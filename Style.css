@@ -542,7 +542,8 @@ header[data-testid="stHeader"] { background: transparent; pointer-events: none; 
 [role="dialog"] [data-testid="stWidgetLabel"] p { font-size: 14px; font-weight: 600; color: var(--text) !important; }
 [role="dialog"] .adm-error { margin-top: -4px; }
 
-[data-testid="stMarkdownContainer"]:has(.row-head, .ex-head, .adm-steps, .adm-stats, .adm-grid, .adm-hint, .adm-user) { margin-bottom: 0 !important; }
+[data-testid="stMarkdownContainer"]:has(.row-head, .ex-head, .adm-steps, .adm-stats, .adm-grid, .adm-hint, .adm-user, .adm-note) { margin-bottom: 0 !important; }
+.st-key-adm_add [data-testid="stMarkdownContainer"]:has(.adm-title) { margin-bottom: 6px !important; }
 .ex-head, .row-head { display: flex; gap: 16px; align-items: center; font-size: 13px; font-weight: 600; }
 .ex-head { color: var(--text-2); padding: 0 52px 0 0; margin: -6px 0 -8px; }
 .ex-head span:first-child { width: 36px; flex-shrink: 0; }

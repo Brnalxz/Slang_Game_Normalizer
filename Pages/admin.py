@@ -32,7 +32,7 @@ PAGE_SIZE = 10
 SEARCH_DELAY = "200ms"
 MAX_EXAMPLES = 10
 MAX_SENTENCE_CHARS = 500
-NEW_DAYS = 7
+NEW_DAYS = 14
 TIMEZONE = ZoneInfo("Asia/Jakarta")
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
 
