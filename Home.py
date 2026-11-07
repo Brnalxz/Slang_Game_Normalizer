@@ -16,7 +16,7 @@ sys.path.insert(0, str(BASE_DIR))
 st.set_page_config(page_title="Slang Game Normalizer", page_icon="🎮", layout="wide",
                    initial_sidebar_state="expanded")
 
-from Pages import comment_translator, dictionary_slang_game, text_translator
+from Pages import admin, comment_translator, dictionary_slang_game, text_translator
 from Pages.text_translator import image_data_uri, svg
 
 DARK_MODE_KEY = "dark_mode"
@@ -116,6 +116,8 @@ def build_pages() -> dict:
                            icon=":material/chat_bubble_outline:", url_path="comment-translator"),
         "dict": st.Page(dictionary_slang_game.render, title="Dictionary Slang Game", icon=":material/menu_book:",
                         url_path="dictionary"),
+        "admin": st.Page(admin.render, title="Panel Admin", icon=":material/admin_panel_settings:",
+                         url_path="admin"),
         "about": st.Page(help_about.render_about, title="About", url_path="tentang"),
         "help": st.Page(help_about.render_help, title="Help", url_path="bantuan"),
     }
@@ -125,6 +127,7 @@ def build_pages() -> dict:
 # SIDEBAR
 # =============================================================================
 MAIN_MENU = ("home", "text", "comment", "dict")
+ADMIN_MENU = ("admin",)
 EXTRA_MENU = ("about", "help")
 
 def _menu_link(pages: dict, key: str, group: str, current_title: str) -> None:
@@ -150,7 +153,7 @@ def render_sidebar(pages: dict, current_title: str) -> None:
                 </div>""",
             unsafe_allow_html=True,
         )
-        for key in MAIN_MENU:
+        for key in MAIN_MENU + (ADMIN_MENU if admin.is_admin() else ()):
             _menu_link(pages, key, "nav", current_title)
         st.markdown('<hr class="side-divider">', unsafe_allow_html=True)
         for key in EXTRA_MENU:

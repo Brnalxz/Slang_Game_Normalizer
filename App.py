@@ -1,5 +1,6 @@
 """App.py"""
 import argparse
+import json
 import os
 import re
 import string
@@ -26,9 +27,26 @@ if __name__ == "__main__" and not _run_by_streamlit():
 # =============================================================================
 BASE_DIR = Path(__file__).parent
 
-KAMUS_PATH = BASE_DIR / "Kamus_Slang_Game.xlsx"
+KAMUS_NAME = "Kamus_Slang_Game.xlsx"
+KAMUS_PATH = BASE_DIR / KAMUS_NAME
 KAMUS_CSV_FALLBACK = BASE_DIR / "KamusSlangGame.csv"
 KORPUS_PATH = BASE_DIR / "ParallelCorpus_Augmented.csv"
+DATA_BARU_NAME = "data_baru.csv"
+MODEL_CONFIG_NAME = "model_aktif.json"
+STORE_DIR = BASE_DIR / ".data_admin"
+
+
+def get_secret(name: str) -> str | None:
+    value = os.getenv(name)
+    if value:
+        return value
+    try:
+        return st.secrets.get(name)
+    except Exception:
+        return None
+
+
+DATA_REPO = get_secret("DATA_REPO")
 
 MODEL_ID = os.getenv("MT5_MODEL_ID", "Brnalxz/mt5-small-normalisasi-slang-game")
 MODEL_REVISION = os.getenv("MT5_MODEL_REVISION", "main")
@@ -46,6 +64,7 @@ CHUNK_WORDS = 40
 # 1. KAMUS
 # =============================================================================
 MAX_PHRASE_WORDS = 4
+KAMUS_COLUMNS = ["slang", "baku", "ditambahkan"]
 
 
 @st.cache_data(show_spinner=False)
@@ -55,16 +74,16 @@ def _read_kamus_file(path: str, modified_time: float) -> pd.DataFrame:
     else:
         df = pd.read_csv(path, sep=None, engine="python", encoding="utf-8-sig")
 
-    df = df.iloc[:, :2].copy()
-    df.columns = ["slang", "baku"]
-    df = df.dropna()
+    df = df.iloc[:, :3].copy()
+    df.columns = KAMUS_COLUMNS[:df.shape[1]]
+    df = df.reindex(columns=KAMUS_COLUMNS).dropna(subset=["slang", "baku"])
     df["slang"] = df["slang"].astype(str).str.strip().str.lower()
     df["baku"] = df["baku"].astype(str).str.strip()
     df = df[(df["slang"] != "") & (df["baku"] != "")]
     return df.drop_duplicates(subset="slang").reset_index(drop=True)
 
 def _kamus_file() -> Path:
-    for path in (KAMUS_PATH, KAMUS_CSV_FALLBACK):
+    for path in (store_path(KAMUS_NAME), KAMUS_PATH, KAMUS_CSV_FALLBACK):
         if path.exists():
             return path
     raise FileNotFoundError(
@@ -186,15 +205,9 @@ LIBRARY_MISSING_MSG = "Library belum terpasang ({}). Jalankan: pip install -r re
 
 # ---- 4a. Memuat model ----
 def _hf_token() -> str | None:
-    token = os.getenv("HF_TOKEN")
-    if token:
-        return token
-    try:
-        return st.secrets.get("HF_TOKEN")
-    except Exception:
-        return None
+    return get_secret("HF_TOKEN")
 
-def _describe_load_error(error: Exception) -> str:
+def _describe_load_error(error: Exception, model_id: str) -> str:
     text = str(error).strip()
     message = text.splitlines()[0][:300] if text else type(error).__name__
     if "sentencepiece" in text.lower() or "protobuf" in text.lower():
@@ -202,7 +215,7 @@ def _describe_load_error(error: Exception) -> str:
     elif "Can't load" in text or "huggingface.co" in text or "connect" in text.lower():
         message = (f"tidak bisa mengunduh dari Hugging Face. Periksa koneksi internet dan nama MODEL_ID "
                    f"(repo private butuh HF_TOKEN). Detail: {message[:150]}")
-    return f"Model '{MODEL_ID}' gagal dimuat: {message}"
+    return f"Model '{model_id}' gagal dimuat: {message}"
 
 def _format_param_count(count: int) -> str:
     return f"{count / 1e6:.0f} juta parameter" if count >= 1e6 else f"{count / 1e3:.0f} ribu parameter"
@@ -220,7 +233,7 @@ def _load_model_cached(model_id: str, revision: str):
         tokenizer = AutoTokenizer.from_pretrained(model_id, **options)
         model = AutoModelForSeq2SeqLM.from_pretrained(model_id, **options)
     except Exception as e:
-        return None, _describe_load_error(e)
+        return None, _describe_load_error(e, model_id)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device).eval()
@@ -229,9 +242,25 @@ def _load_model_cached(model_id: str, revision: str):
     return {"tokenizer": tokenizer, "model": model, "device": device, "info": info}, None
 
 def load_mt5():
-    if not MODEL_ID.strip():
+    model_id, revision = active_model()
+    if not model_id.strip():
         return None, "MODEL_ID di App.py belum diisi."
-    return _load_model_cached(MODEL_ID, MODEL_REVISION)
+    return _load_model_cached(model_id, revision)
+
+def active_model() -> tuple[str, str]:
+    try:
+        config = json.loads(store_path(MODEL_CONFIG_NAME).read_text(encoding="utf-8"))
+        return config["model_id"], config.get("revision") or "main"
+    except Exception:
+        return MODEL_ID, MODEL_REVISION
+
+def set_active_model(model_id: str, revision: str) -> str | None:
+    config = json.dumps({"model_id": model_id, "revision": revision}, indent=2)
+    _replace_file(store_path(MODEL_CONFIG_NAME), lambda path: path.write_text(config, encoding="utf-8"))
+    return save_to_store(MODEL_CONFIG_NAME)
+
+def reload_model() -> None:
+    _load_model_cached.clear()
 
 def engine_info() -> str | None:
     bundle, error = load_mt5()
@@ -348,3 +377,79 @@ def unknown_words(text) -> list[str]:
         return []
     vocabulary = _build_vocabulary(str(KORPUS_PATH), KORPUS_PATH.stat().st_mtime, load_kamus())
     return list(dict.fromkeys(w for w in _words(text) if w not in vocabulary))
+
+
+# =============================================================================
+# 7. PENYIMPANAN DATA ADMIN — folder aplikasi, atau dataset Hugging Face jika DATA_REPO diisi
+# =============================================================================
+STORE_FILES = (KAMUS_NAME, DATA_BARU_NAME, MODEL_CONFIG_NAME)
+DATA_BARU_COLUMNS = ["clean_comment", "baku_reference", "istilah", "ditambahkan"]
+
+def remote_storage() -> bool:
+    return bool(DATA_REPO)
+
+@st.cache_resource(show_spinner="Mengambil data admin dari Hugging Face...")
+def _download_store() -> str | None:
+    if not remote_storage():
+        return None
+    from huggingface_hub import hf_hub_download
+    from huggingface_hub.errors import RemoteEntryNotFoundError, RepositoryNotFoundError
+
+    for name in STORE_FILES:
+        try:
+            hf_hub_download(DATA_REPO, name, repo_type="dataset", token=_hf_token(), local_dir=STORE_DIR)
+        except (RemoteEntryNotFoundError, RepositoryNotFoundError):
+            continue
+        except Exception as e:
+            return f"Data admin gagal diambil dari Hugging Face ({DATA_REPO}): {str(e).splitlines()[0][:150]}"
+    return None
+
+def store_error() -> str | None:
+    return _download_store()
+
+def refresh_store() -> None:
+    _download_store.clear()
+
+def store_path(name: str) -> Path:
+    _download_store()
+    return (STORE_DIR if remote_storage() else BASE_DIR) / name
+
+def _replace_file(path: Path, write) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_name(f".tmp_{path.name}")
+    write(temp)
+    os.replace(temp, path)
+
+def save_to_store(name: str) -> str | None:
+    if not remote_storage():
+        return None
+    try:
+        from huggingface_hub import HfApi
+        api = HfApi(token=_hf_token())
+        api.create_repo(DATA_REPO, repo_type="dataset", private=True, exist_ok=True)
+        api.upload_file(path_or_fileobj=str(store_path(name)), path_in_repo=name, repo_id=DATA_REPO,
+                        repo_type="dataset", commit_message=f"Admin: perbarui {name}")
+    except Exception as e:
+        return (f"Perubahan {name} tersimpan sementara, tetapi gagal diunggah ke Hugging Face ({DATA_REPO}): "
+                f"{str(e).splitlines()[0][:150]}")
+    return None
+
+def kamus_bytes() -> bytes:
+    return _kamus_file().read_bytes()
+
+def save_kamus(df: pd.DataFrame) -> str | None:
+    table = df.reindex(columns=KAMUS_COLUMNS)
+    _replace_file(store_path(KAMUS_NAME), lambda path: table.to_excel(path, index=False))
+    return save_to_store(KAMUS_NAME)
+
+def load_data_baru() -> pd.DataFrame:
+    path = store_path(DATA_BARU_NAME)
+    if not path.exists():
+        return pd.DataFrame(columns=DATA_BARU_COLUMNS)
+    df = pd.read_csv(path, dtype=str, keep_default_na=False)
+    return df.reindex(columns=DATA_BARU_COLUMNS).fillna("")
+
+def save_data_baru(df: pd.DataFrame) -> str | None:
+    table = df.reindex(columns=DATA_BARU_COLUMNS)
+    _replace_file(store_path(DATA_BARU_NAME), lambda path: table.to_csv(path, index=False, encoding="utf-8"))
+    return save_to_store(DATA_BARU_NAME)

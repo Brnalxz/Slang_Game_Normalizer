@@ -1,11 +1,13 @@
 """Halaman 4: Dictionary Slang Game"""
+import html
 import math
 
 import pandas as pd
 import streamlit as st
 
 from App import load_kamus
-from Pages.text_translator import html_table, page_header, pager
+from Pages.admin import admin_button, header_with_actions, is_new
+from Pages.text_translator import html_table, pager
 
 PAGE_SIZE = 10
 SEARCH_DELAY = "200ms"
@@ -16,6 +18,7 @@ WIDTHS = ["64px", "30%", None]
 
 PAGE_KEY = "dict_page"
 LAST_QUERY_KEY = "dict_q"
+MAX_NEW_TERMS = 6
 
 
 def _search_box() -> str:
@@ -43,9 +46,19 @@ def _current_page(query: str, total_pages: int) -> int:
     return page
 
 
+def _new_terms(df: pd.DataFrame) -> None:
+    new = df[df["ditambahkan"].map(is_new)].sort_values("ditambahkan", ascending=False)
+    if new.empty:
+        return
+    chips = "".join(f'<span class="new-chip">{html.escape(s)}<span class="badge-new">Baru</span></span>'
+                    for s in new["slang"].head(MAX_NEW_TERMS))
+    st.markdown(f'<div class="new-terms"><span>Baru ditambahkan:</span>{chips}</div>', unsafe_allow_html=True)
+
+
 @st.fragment
 def _dictionary(df: pd.DataFrame) -> None:
     query = _search_box()
+    _new_terms(df)
     view = _filter(df, query)
 
     total_pages = max(1, math.ceil(len(view) / PAGE_SIZE))
@@ -62,6 +75,8 @@ def _dictionary(df: pd.DataFrame) -> None:
 
 
 def render() -> None:
-    page_header("Dictionary Slang Game",
-                "Kumpulan basis data istilah gaul, jargon, dan singkatan komunitas gamer Indonesia")
+    with header_with_actions("Dictionary Slang Game",
+                             "Kumpulan basis data istilah gaul, jargon, dan singkatan komunitas gamer Indonesia",
+                             "dict_head"):
+        admin_button()
     _dictionary(load_kamus())
