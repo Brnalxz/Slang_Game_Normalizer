@@ -31,8 +31,9 @@ DATA_PAGE_KEY = "adm_data_page"
 PAGE_SIZE = 10
 SEARCH_DELAY = "200ms"
 MAX_EXAMPLES = 10
+MIN_TRAIN_ROWS = 20
 MAX_SENTENCE_CHARS = 500
-NEW_DAYS = 14
+NEW_DAYS = 7
 TIMEZONE = ZoneInfo("Asia/Jakarta")
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
 
@@ -473,8 +474,13 @@ def _data_tab() -> None:
                              "Diunduh sebagai data_baru.csv untuk notebook fine-tuning lanjutan")
             st.download_button("Download data_baru.csv", data=data.to_csv(index=False).encode("utf-8"),
                                file_name="data_baru.csv", mime="text/csv", type="primary",
-                               icon=":material/download:", on_click="ignore", disabled=data.empty,
-                               key="adm_dl_data")
+                               icon=":material/download:", on_click="ignore",
+                               disabled=len(data) < MIN_TRAIN_ROWS, key="adm_dl_data")
+        if len(data) < MIN_TRAIN_ROWS:
+            st.markdown(f'<div class="adm-hint">{svg("alert", 16)}<span>Data latih baru dapat diunduh setelah '
+                        f'terkumpul minimal <b>{MIN_TRAIN_ROWS} contoh kalimat</b> (saat ini {len(data)}, kurang '
+                        f'{MIN_TRAIN_ROWS - len(data)}). Data yang terlalu sedikit tidak cukup berpengaruh saat '
+                        f'model di-fine-tuning ulang.</span></div>', unsafe_allow_html=True)
         _data_table(data)
 
 
@@ -665,7 +671,7 @@ def render() -> None:
 
     with header_with_actions("Panel Admin", "Kelola kamus slang game, data latih baru, dan pembaruan model",
                              "adm_head"):
-        st.markdown('<div class="adm-user"><span></span>Masuk sebagai<b>admin</b></div>', unsafe_allow_html=True,
+        st.markdown('<div class="adm-user"><span></span>Masuk sebagai <b>admin</b></div>', unsafe_allow_html=True,
                     width="content")
         if st.button("Keluar", icon=":material/logout:", key="adm_logout"):
             _logout()

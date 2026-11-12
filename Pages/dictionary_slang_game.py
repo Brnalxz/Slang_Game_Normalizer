@@ -50,8 +50,7 @@ def _new_terms(df: pd.DataFrame) -> None:
     new = df[df["ditambahkan"].map(is_new)].sort_values("ditambahkan", ascending=False)
     if new.empty:
         return
-    chips = "".join(f'<span class="new-chip">{html.escape(s)}<span class="badge-new">Baru</span></span>'
-                    for s in new["slang"].head(MAX_NEW_TERMS))
+    chips = "".join(f'<span class="new-chip">{html.escape(s)}</span>' for s in new["slang"].head(MAX_NEW_TERMS))
     st.markdown(f'<div class="new-terms"><span>Baru ditambahkan:</span>{chips}</div>', unsafe_allow_html=True)
 
 
